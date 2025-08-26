@@ -1,0 +1,463 @@
+/* ===============================
+   Design-Token / Variablen
+   =============================== */
+:root{
+  --brand-700:#677E7C;      /* dunkles Salbeigrün (Tabs, Header)   */
+  --brand-300:#CCE6DA;      /* helles Mint (Kategorie-Buttons)      */
+  --gray-100:#FAFAFA;       /* Flächen                              */
+  --gray-300:#EEEEEE;       /* Tasten/Buttons neutral               */
+  --gray-400:#D9D9D8;       /* Rahmen/Trennlinien                   */
+  --text:#1A1A1A;           /* Standardtext                         */
+  --radius-sm:8px;
+  --radius-md:12px;
+  --radius-lg:16px;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 2px 6px rgba(0,0,0,.06);
+}
+
+/* ===============================
+   Allgemeines Layout
+   =============================== */
+body{
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, "Noto Sans";
+  background-color:#fff;             /* im Mock ist es weiß */
+  margin:0;
+  padding:0;
+  color:var(--text);
+}
+
+/* Header */
+header{
+  background-color: #fff;
+  color: var(--brand-700);
+  padding:14px 18px;
+  margin: 0 auto;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  box-shadow:var(--shadow-sm);
+  max-width:900px;   
+}
+header h1{
+  margin:0;
+  font-size:18px;
+  letter-spacing:.2px;
+  font-weight:700;
+}
+header a{
+  color: var(--brand-700);
+  text-decoration:none;
+  font-weight:600;
+  opacity:.95;
+}
+header a:hover{ text-decoration:underline; }
+
+/* Logo */
+.logo {
+  display: flex;
+  justify-content: flex-end;
+  margin-top:5px;
+}
+.logo img {
+    width: 170px;
+}
+
+/* checkin */
+.login-box {
+    width: 400px;
+    margin: 40px auto;
+}
+.login-box button {
+    background-color: var(--brand-700);
+    color: #fff;
+    padding: 15px;
+}
+
+/* checkout */
+.checkout input {
+    width: 70px;
+}
+.payment-group .radio input {
+    display: none;
+}
+.payment-group .radio:has(input:checked) {
+    background-color: #6B6B6B;
+}
+.checkout button {
+    padding: 25px;
+    font-size: 20px;
+    background-color: var(--brand-700);
+    color: #fff;
+}
+
+/* Zahlungs-Tabs (falls im Header oder darunter verwendet) */
+.tabs{
+  display:grid;
+  grid-auto-flow:column;
+  gap:12px;
+  margin:12px 18px 0;
+}
+.tab{
+  background:var(--brand-700);
+  color:#fff;
+  border-radius:var(--radius-md);
+  padding:10px 16px;
+  font-weight:700;
+  letter-spacing:.2px;
+  box-shadow:var(--shadow-sm);
+  border:none;
+}
+.tab--active{ filter:brightness(1.05); }
+
+/* Suche (unter den Tabs) */
+.searchbar{
+  display:block;
+  width:calc(100% - 36px);
+  margin:12px 18px 0 0;
+  border:1px solid var(--gray-400);
+  border-radius:var(--radius-md);
+  padding:10px 14px;
+  background:#fff;
+}
+
+/* ===============================
+   Boxen / Sektionen (Ticketbereich)
+   =============================== */
+section{
+  background:#fff;
+  padding:0px;
+  margin:0px auto;
+  border-radius:0;
+  box-shadow:none;
+  border:0px solid var(--gray-400);
+  max-width:900px;          /* etwas breiter wie im Mock */
+}
+.cart {
+    border: 1px solid var(--gray-400);
+    padding: 10px;
+    width: 880px;
+}
+h2{
+  margin:0 0 12px 0;
+  color:#000;               /* Titel im Mock schwarz */
+  font-weight:800;
+  font-size:22px;
+}
+
+/* Ticket-Inhalt (2 Spalten: Ware / Betrag) */
+.ticket-grid{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:8px;
+}
+.ticket-total{
+  border-top:2px solid var(--gray-400);
+  margin-top:12px;
+  padding-top:8px;
+  font-weight:800;
+  display:grid;
+  grid-template-columns:1fr auto;
+}
+
+/* ===============================
+   Tabellen (falls in Listen genutzt)
+   =============================== */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-bottom:12px;
+  background:#fff;
+}
+table th, table td{
+  border:0px solid var(--gray-400);
+  padding:8px 10px;
+  text-align:left;
+}
+table th{
+  background:#fff;          /* im Mock keine dunklen Table-Headers */
+  color:var(--text);
+  font-weight:700;
+}
+tr.table-line {
+    border-top: 1px solid var(--brand-700);
+}
+
+/* ===============================
+   Formulare
+   =============================== */
+form{ display:flex; flex-direction:column; gap:10px; }
+label{ font-weight:700; }
+input, select, button, textarea{
+  padding:10px;
+  font-size:14px;
+  border-radius:0;
+  border:1px solid var(--gray-400);
+  background:#fff;
+  color:var(--text);
+}
+.right form, .add-product form, .customer form {
+    flex-direction: row;
+    padding-bottom: 20px;
+}
+
+/* Primär-/Sekundärbuttons (neutral grau wie im Mock) */
+button{
+  background:var(--gray-300);
+  color:#000;
+  cursor:pointer;
+  font-weight:700;
+  border:1px solid var(--gray-300);
+  box-shadow:var(--shadow-sm);
+}
+button:hover{ filter:brightness(0.98); }
+
+/* Kategorie-Gruppen-Buttons (grün) */
+.btn-group{
+  background:var(--brand-300);
+  border:1px solid var(--brand-300);
+  color:#000;
+  border-radius:10px;
+  padding:12px 14px;
+  font-weight:700;
+  box-shadow:var(--shadow-sm);
+}
+
+/* Gefahr/Abbrechen (Storno) */
+.btn-danger{
+  background:#EBEBEB;
+  border:1px solid #EBEBEB;
+  color:#000;
+}
+
+/* Footer-Aktionen (Bon/Lieferschein/Rechnung) */
+.footer-actions{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.footer-actions .btn{
+  background:var(--gray-300);
+  border:1px solid var(--gray-300);
+  border-radius:10px;
+  padding:12px 18px;
+  font-weight:800;
+}
+
+/* ===============================
+   Numerisches Keypad & Raster
+   =============================== */
+.keypad{
+  display:grid;
+  grid-template-columns:repeat(5, 80px);
+  gap:8px;
+}
+.key{
+  background:var(--gray-300);
+  border-radius:8px;
+  padding:20px;
+  text-align:center;
+  font-weight:700;
+  border:1px solid var(--gray-300);
+  box-shadow:var(--shadow-sm);
+}
+
+/* ===============================
+   Kleinkram
+   =============================== */
+.timebar{
+  color:#6B6B6B;
+  font-weight:600;
+  letter-spacing:.2px;
+}
+.logo{ color:var(--brand-700); }
+
+/* Fehler- und Info-Nachrichten */
+.error{
+  background-color:#ffdddd;
+  color:#a00000;
+  padding:10px;
+  border:1px solid #a00000;
+  border-radius:5px;
+  margin:10px 0;
+}
+.tasten img {
+    width: 900px;
+    margin-bottom: 25px;
+    margin-top: 5px;
+}
+.date {
+    padding-top: 10px;
+    font-weight: 700;
+}
+
+
+/* ===============================
+   noch nicht zugeordnet
+   =============================== */
+
+.payment-group { 
+  border: 0; 
+  margin: 8px 0 12px; 
+  padding: 0; 
+  display: flex; 
+  gap: 12px; 
+  flex-wrap: wrap;
+}
+.payment-group legend { 
+  font-weight: 700; 
+  margin-bottom: 6px; 
+  width: 100%;
+}
+.payment-group .radio { 
+  display: inline-flex; 
+  align-items: center; 
+  gap: 6px; 
+  background: var(--brand-300); 
+  border-radius: 0; 
+  padding: 15px 30px; 
+  font-weight: 700; 
+  cursor: pointer; 
+  box-shadow: var(--shadow-sm);
+  color: #000;
+}
+.payment-group .radio input { 
+  accent-color: var(--brand-700); 
+}
+.payment-group .radio:has(input:checked) { 
+  filter: brightness(0.98);
+  color: #fff;
+}
+
+.searchbar-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.search-input {
+  padding-left: 38px; /* Platz für die Lupe links */
+}
+
+
+.search-icon {
+  position: absolute;
+  left: 660px;
+  top: 65%;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  padding: 0;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: .8;
+}
+.search-icon img {
+    width: 30px;
+    display: block;
+}
+
+.search-icon svg path {
+  fill: currentColor;
+}
+
+.infield-icon .search-input {
+  /* deine bestehenden Suchfeld-Styles; Beispiel: */
+  border: 1px solid var(--gray-400);
+  border-radius: 0;
+  padding: 10px 14px 10px 15px;
+  background: #fff;
+  font-size: 14px;
+}
+
+.searchbar-wrapper { position: relative; display: inline-block; }
+.search-input { padding-left: 38px; }
+.search-icon {
+  position: absolute; left: 660px; top: 62%; transform: translateY(-50%);
+  border: 0; background: transparent; padding: 0; width: 22px; height: 22px;
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer; opacity: .8;
+}
+.search-icon svg path { fill: currentColor; }
+
+
+
+
+/* ===============================
+   Tasten-Sektion
+   =============================== */
+
+
+/* Layout der Tasten-Sektion */
+.tasten{
+  display:grid;
+  grid-template-columns:auto 1fr;
+  gap:16px;
+  align-items:start;
+  margin:18px auto;
+  max-width:900px;
+}
+
+/* Linkes Nummern-Pad */
+.keypad{
+  display:grid;
+  grid-template-columns:repeat(5, 80px);
+  gap:8px;
+}
+.key{
+  background: var(--gray-300, #EEEEEE);
+  border: 1px solid var(--gray-300, #EEEEEE);
+  border-radius: 0px;
+  padding: 20px 0;
+  text-align: center;
+  font-weight: 700;
+  box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,.04));
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Rechte Kategorie-Spalte */
+.keypad-side{
+  display:grid;
+  gap:12px;
+  min-width: 260px;
+}
+.cat-btn{
+  background: var(--brand-300, #CCE6DA);
+  border: 1px solid var(--brand-300, #CCE6DA);
+  border-radius: 0px;
+  padding: 17px 14px;
+  font-weight: 700;
+  text-align:center;
+  cursor:pointer;
+  box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,.04));
+  font-size: 18px;
+}
+.cat-btn--muted{
+  background: #EBEBEB;
+  border-color: #EBEBEB;
+}
+
+/* Alphabetisches Pad unter beiden Spalten */
+.alpha-pad{
+  grid-column: 1 / -1;         /* unter Nummern-Pad + Kategorie-Spalte */
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+.alpha-row{
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 83px;      /* Tastenbreite */
+  gap: 8px;
+  justify-content: start;
+}
+.alpha-key{
+  padding: 15px 0;              /* etwas kompakter als Zahlen-Tasten */
+  border-radius: 0px;
+}
+/* Alpha-Pad hast du schon – hier nur die Extras */
+.alpha-row--special { margin-top: 4px; }
+.alpha-space { grid-column: span 4; }     /* macht die Leerzeichen-Taste breiter */
+.alpha-back  { font-weight: 800; }        /* optisch etwas hervorgehoben */
