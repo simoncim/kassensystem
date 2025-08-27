@@ -1,260 +1,302 @@
+/* =============================================
+   Stylesheet: assets/styles.css
+   Zweck: Oberfläche Kassensystem (Verkaufsabwicklung)
+============================================= */
+
 /* ===============================
    Design-Token / Variablen
+   -> Zentrale Farb-, Radius-, Schatten- und Typo-Definitionen
    =============================== */
 :root{
-  --brand-700:#677E7C;      /* dunkles Salbeigrün (Tabs, Header)   */
-  --brand-300:#CCE6DA;      /* helles Mint (Kategorie-Buttons)      */
-  --gray-100:#FAFAFA;       /* Flächen                              */
-  --gray-300:#EEEEEE;       /* Tasten/Buttons neutral               */
-  --gray-400:#D9D9D8;       /* Rahmen/Trennlinien                   */
-  --text:#1A1A1A;           /* Standardtext                         */
-  --radius-sm:8px;
-  --radius-md:12px;
-  --radius-lg:16px;
-  --shadow-sm:0 1px 2px rgba(0,0,0,.04);
-  --shadow-md:0 2px 6px rgba(0,0,0,.06);
+  --brand-700:#677E7C;      /* dunkles Salbeigrün (Primär, Akzent, Titel/Buttons) */
+  --brand-300:#CCE6DA;      /* helles Mint (Flächen/Gruppe/Kategorie) */
+  --gray-100:#FAFAFA;       /* sehr helle Flächen (Hintergründe) */
+  --gray-300:#EEEEEE;       /* neutrale Button-/Tastenfläche */
+  --gray-400:#D9D9D8;       /* Rahmen/Trennlinien */
+  --text:#1A1A1A;           /* Standard-Textfarbe (nahe Schwarz) */
+  --radius-sm:0px;          /* keine Rundung */
+  --radius-md:0px;         /* keine Rundung */
+  --radius-lg:0px;         /* keine Rundung */
+  --shadow-sm:0 1px 2px rgba(0,0,0,.04);  /* sehr dezenter Schatten */
+  --shadow-md:0 2px 6px rgba(0,0,0,.06);  /* etwas stärkerer Schatten */
 }
 
 /* ===============================
    Allgemeines Layout
+   -> Basis-Typo, Hintergrund und Textfarbe
    =============================== */
 body{
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, "Noto Sans";
-  background-color:#fff;             /* im Mock ist es weiß */
-  margin:0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, "Noto Sans"; /* performante System-Schriften */
+  background-color:#fff;            /* weißer Seitenhintergrund */
+  margin:0;                         /* Standardabstände entfernen */
   padding:0;
-  color:var(--text);
+  color:var(--text);                /* globale Textfarbe */
 }
 
-/* Header */
+/* Header
+   -> Oberer Bereich mit Titel, Login-Link etc. */
 header{
-  background-color: #fff;
-  color: var(--brand-700);
-  padding:14px 18px;
-  margin: 0 auto;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  box-shadow:var(--shadow-sm);
-  max-width:900px;   
+  background-color: #fff;           /* weißer Header */
+  color: var(--brand-700);          /* Marken-Grün für Texte/Icons */
+  padding:14px 18px;                /* Innenabstand */
+  margin: 0 auto;                   /* mittig ausgerichtet */
+  display:flex;                     /* Layout: Inhalt nebeneinander */
+  justify-content:space-between;    
+  align-items:center;               /* vertikal zentrieren */
+  box-shadow:var(--shadow-sm);      /* dezente Linie/Trennung */
+  max-width:900px;                  /* Content-Breite begrenzen */
 }
 header h1{
   margin:0;
-  font-size:18px;
-  letter-spacing:.2px;
-  font-weight:700;
+  font-size:18px;                   /* kompakter Titel */
+  letter-spacing:.2px;              /* leichte Laufweite */
+  font-weight:700;                  /* kräftig */
 }
 header a{
-  color: var(--brand-700);
-  text-decoration:none;
+  color: var(--brand-700);          /* Linkfarbe = Marken-Grün */
+  text-decoration:none;             /* Standard-Links ohne Unterstreichung */
   font-weight:600;
-  opacity:.95;
+  opacity:.95;                      /* minimal gedimmt */
 }
-header a:hover{ text-decoration:underline; }
+header a:hover{ text-decoration:underline; } /* Hover-Zustand für Links */
 
-/* Logo */
-.logo {
+/* Menü und Logo
+   -> Bereich für Logo rechts und Menülinien (Hamburger-Stil) */
+.menu-und-logo {
   display: flex;
-  justify-content: flex-end;
-  margin-top:5px;
+  justify-content: flex-end;        /* Logo/ Menü rechtsbündig */
+  margin-top:5px;                   /* kleiner Abstand unter Headerzeile */
 }
-.logo img {
-    width: 170px;
+.menu-und-logo img {
+    width: 170px;                   /* Logo-Größe */
+}
+.menu {
+    margin: 167px 185px 0 0px;      /* positioniert das Menü relativ zur Seite */
+    position: absolute;             /* absolute Positionierung für frei platzierte Linien */
+}
+.menu .line {
+    width: 50px;                    /* Breite jeder Menülinie */
+    border-top: 1px solid #000;     /* dünne schwarze Linie */
+    margin-bottom: 15px;            /* Abstand zwischen Linien */
 }
 
-/* checkin */
+/* checkin
+   -> Login-Box auf der Start-/Login-Seite */
 .login-box {
-    width: 400px;
-    margin: 40px auto;
+    width: 400px;                   /* max. Breite der Login-Box */
+    margin: 40px auto;              /* zentriert mit Abstand nach oben */
 }
 .login-box button {
-    background-color: var(--brand-700);
-    color: #fff;
-    padding: 15px;
+    background-color: var(--brand-700); /* Einloggen-Button in Markenfarbe */
+    color: #fff;                    /* weiße Schrift */
+    padding: 15px;                  /* großzügiger Klickbereich */
+}
+.logo-und-ueberschrift img {
+    width: 220px;                   /* großes Logo im Login-Kontext */
 }
 
-/* checkout */
+/* checkout
+   -> Bereich für Verkaufsabschluss (Rabatt/Zahlung/Submit) */
 .checkout input {
-    width: 70px;
+    width: 70px;                    /* kompakte Eingabefelder (z. B. Rabatt) */
+}
+.payment-group .radio {
+    font-size: 19px;                /* größere Radiolabels für bessere Bedienbarkeit */
 }
 .payment-group .radio input {
-    display: none;
+    display: none;                  /* echtes Radio verstecken; Label dient als „Button“ */
 }
 .payment-group .radio:has(input:checked) {
-    background-color: #6B6B6B;
+    background-color: #6B6B6B;      /* aktiver Zahlungsmodus abgedunkelt */
 }
 .checkout button {
-    padding: 25px;
-    font-size: 20px;
+    padding: 25px;                  /* großer Klickbereich für Abschluss-Buttons */
+    font-size: 20px;                /* auffällige Schrift */
     background-color: var(--brand-700);
     color: #fff;
 }
 
-/* Zahlungs-Tabs (falls im Header oder darunter verwendet) */
+/* Zahlungs-Tabs (falls im Header oder darunter verwendet)
+   -> horizontale Auswahlleiste */
 .tabs{
-  display:grid;
-  grid-auto-flow:column;
-  gap:12px;
-  margin:12px 18px 0;
+  display:grid;                     /* gleichmäßige Tabverteilung */
+  grid-auto-flow:column;            /* Tabs nebeneinander */
+  gap:12px;                         /* Abstände zwischen Tabs */
+  margin:12px 18px 0;               /* Position unter Header */
 }
 .tab{
   background:var(--brand-700);
   color:#fff;
   border-radius:var(--radius-md);
-  padding:10px 16px;
+  padding:10px 16px;                /* Tab-Innenabstand */
   font-weight:700;
   letter-spacing:.2px;
   box-shadow:var(--shadow-sm);
-  border:none;
+  border:none;                      /* kein Rahmen */
 }
-.tab--active{ filter:brightness(1.05); }
+.tab--active{ filter:brightness(1.05); } /* aktiver Tab leicht aufgehellt */
 
-/* Suche (unter den Tabs) */
+/* Suche (unter den Tabs)
+   -> generisches Suchfeld-Design */
 .searchbar{
   display:block;
-  width:calc(100% - 36px);
-  margin:12px 18px 0 0;
-  border:1px solid var(--gray-400);
-  border-radius:var(--radius-md);
-  padding:10px 14px;
+  width:calc(100% - 36px);          /* volle Breite mit Randabzug */
+  margin:12px 18px 0 0;             /* Positionierung */
+  border:1px solid var(--gray-400); /* dezente Umrandung */
+  border-radius:var(--radius-md);   /* weiche Kanten */
+  padding:10px 14px;                /* Innenabstand */
   background:#fff;
 }
 
 /* ===============================
-   Boxen / Sektionen (Ticketbereich)
+   Boxen / Sektionen 
+   -> Standard-Section-Layout
    =============================== */
 section{
-  background:#fff;
-  padding:0px;
-  margin:0px auto;
-  border-radius:0;
-  box-shadow:none;
-  border:0px solid var(--gray-400);
-  max-width:900px;          /* etwas breiter wie im Mock */
+  background:#fff;                  /* weiße Sektionen */
+  padding:0px;                      /* kein Innenabstand per Default */
+  margin:0px auto;                  /* zentriert */
+  border-radius:0;                  /* eckig */
+  box-shadow:none;                  /* flach */
+  border:0px solid var(--gray-400); /* Rahmen ausgeschaltet */
+  max-width:900px;                  /* Layoutbreite */
 }
 .cart {
-    border: 1px solid var(--gray-400);
-    padding: 10px;
-    width: 880px;
+    border: 1px solid var(--gray-400); /* sichtbarer Rahmen nur für Artikelübersicht */
+    padding: 10px;                     /* Innenabstand */
+    width: 880px;                      /* feste Breite, passend zu max-width */
 }
 h2{
-  margin:0 0 12px 0;
-  color:#000;               /* Titel im Mock schwarz */
-  font-weight:800;
-  font-size:22px;
+  margin:0 0 12px 0;                 /* Abstand unterhalb */
+  color:#000;                         /* schwarze Überschrift */
+  font-weight:800;                    /* sehr kräftig */
+  font-size:22px;                     /* Headline-Größe */
 }
 
 /* Ticket-Inhalt (2 Spalten: Ware / Betrag) */
 .ticket-grid{
   display:grid;
-  grid-template-columns:1fr auto;
-  gap:8px;
+  grid-template-columns:1fr auto;   /* Beschreibung links, Betrag rechts */
+  gap:8px;                          /* Zeilenabstand */
 }
 .ticket-total{
-  border-top:2px solid var(--gray-400);
-  margin-top:12px;
-  padding-top:8px;
-  font-weight:800;
+  border-top:2px solid var(--gray-400); /* Trenner über Summe */
+  margin-top:12px;                      /* Abstand vor Summe */
+  padding-top:8px;                      /* Abstand nach Trenner */
+  font-weight:800;                      /* Summe hervorheben */
   display:grid;
-  grid-template-columns:1fr auto;
+  grid-template-columns:1fr auto;       /* Bezeichnung links, Wert rechts */
 }
 
 /* ===============================
    Tabellen (falls in Listen genutzt)
+   -> generische Tabellenstile; Ränder bewusst 0 für „flache“ Optik
    =============================== */
 table{
-  width:100%;
-  border-collapse:collapse;
+  width:100%;                      /* volle Breite der Section */
+  border-collapse:collapse;        /* Zellränder zusammenfassen */
   margin-bottom:12px;
   background:#fff;
 }
 table th, table td{
-  border:0px solid var(--gray-400);
+  border:0px solid var(--gray-400); /* hier 0: Linien via separatem .table-line */
   padding:8px 10px;
   text-align:left;
 }
 table th{
-  background:#fff;          /* im Mock keine dunklen Table-Headers */
+  background:#fff;                  /* keine invertierten Header */
   color:var(--text);
   font-weight:700;
 }
 tr.table-line {
-    border-top: 1px solid var(--brand-700);
+    border-top: 1px solid var(--brand-700); /* eigene Zeilentrenner in Markenfarbe */
+}
+tr.table-line td {
+    padding: 20px 10px;             /* großzügiger Zeilenabstand für Lesbarkeit */
+}
+.right {
+    text-align: right;               /* rechtsbündige Zellen (z. B. Preise) */
 }
 
 /* ===============================
    Formulare
+   -> generelles Form-Layout und Inputs
    =============================== */
 form{ display:flex; flex-direction:column; gap:10px; }
-label{ font-weight:700; }
+label{ font-weight:700; }           /* Labels fett für Klarheit */
 input, select, button, textarea{
-  padding:10px;
-  font-size:14px;
-  border-radius:0;
-  border:1px solid var(--gray-400);
+  padding:10px;                     /* einheitlicher Innenabstand */
+  font-size:14px;                   /* Basisgröße */
+  border-radius:0;                  /* eckige Felder */
+  border:1px solid var(--gray-400); /* dezente Umrandung */
   background:#fff;
   color:var(--text);
 }
 .right form, .add-product form, .customer form {
-    flex-direction: row;
-    padding-bottom: 20px;
+    flex-direction: row;             /* bestimmte Formulare nebeneinander ausrichten */
+    padding-bottom: 20px;            /* Luft unterhalb */
 }
 
-/* Primär-/Sekundärbuttons (neutral grau wie im Mock) */
+/* Primär-/Sekundärbuttons
+   -> Standard-Button-Look */
 button{
-  background:var(--gray-300);
-  color:#000;
-  cursor:pointer;
-  font-weight:700;
-  border:1px solid var(--gray-300);
-  box-shadow:var(--shadow-sm);
+  background:var(--gray-300);        /* neutral grau */
+  color:#000;                        /* schwarze Schrift */
+  cursor:pointer;                    /* Mauszeiger als Hand */
+  font-weight:700;                   /* kräftig */
+  border:1px solid var(--gray-300);  /* Rand in Buttonfarbe */
+  box-shadow:var(--shadow-sm);       /* dezenter Schatten */
 }
-button:hover{ filter:brightness(0.98); }
+button:hover{ filter:brightness(0.98); } /* leichte Reaktion bei Hover */
 
-/* Kategorie-Gruppen-Buttons (grün) */
+/* Kategorie-Gruppen-Buttons (grün)
+   -> spezielle Buttons für Waren-Gruppen */
 .btn-group{
   background:var(--brand-300);
   border:1px solid var(--brand-300);
   color:#000;
-  border-radius:10px;
+  border-radius:0px;
   padding:12px 14px;
   font-weight:700;
   box-shadow:var(--shadow-sm);
 }
 
-/* Gefahr/Abbrechen (Storno) */
+/* Gefahr/Abbrechen (Storno)
+   -> zurückhaltendes Grau, da keine Primäraktion */
 .btn-danger{
   background:#EBEBEB;
   border:1px solid #EBEBEB;
   color:#000;
 }
 
-/* Footer-Aktionen (Bon/Lieferschein/Rechnung) */
+/* Footer-Aktionen (Bon/Lieferschein/Rechnung)
+   -> Leiste am Seitenende */
 .footer-actions{
   display:flex;
-  gap:12px;
-  flex-wrap:wrap;
+  gap:12px;                         /* Abstand zwischen Aktionsbuttons */
+  flex-wrap:wrap;                   /* Umbruch bei schmalen Ansichten */
 }
 .footer-actions .btn{
   background:var(--gray-300);
   border:1px solid var(--gray-300);
   border-radius:10px;
   padding:12px 18px;
-  font-weight:800;
+  font-weight:800;                  /* besonders betont */
 }
 
 /* ===============================
-   Numerisches Keypad & Raster
+   Numerisches Keypad & Raster (globale, ältere Variante)
+   -> Hinweis: Unten existiert eine Tasten-Sektion mit erneuter Definition
    =============================== */
 .keypad{
   display:grid;
-  grid-template-columns:repeat(5, 80px);
-  gap:8px;
+  grid-template-columns:repeat(5, 80px); /* 5 Spalten zu je 80px */
+  gap:8px;                                /* Abstand zwischen Tasten */
 }
 .key{
-  background:var(--gray-300);
-  border-radius:8px;
-  padding:20px;
+  background:var(--gray-300);            /* graue Taste */
+  border-radius:0px;
+  padding:20px;                          /* großzügige Taste */
   text-align:center;
   font-weight:700;
   border:1px solid var(--gray-300);
@@ -263,56 +305,61 @@ button:hover{ filter:brightness(0.98); }
 
 /* ===============================
    Kleinkram
+   -> kleine Textakzente, Logo-Farbe, Fehlermeldungen etc.
    =============================== */
 .timebar{
-  color:#6B6B6B;
+  color:#6B6B6B;                        /* sekundärer Textton */
   font-weight:600;
   letter-spacing:.2px;
 }
-.logo{ color:var(--brand-700); }
+.logo{ color:var(--brand-700); }        /* Logos/Marke eingefärbt */
 
 /* Fehler- und Info-Nachrichten */
 .error{
-  background-color:#ffdddd;
-  color:#a00000;
+  background-color:#ffdddd;            /* roter Pastellhintergrund */
+  color:#a00000;                       /* dunkles Rot für Text */
   padding:10px;
-  border:1px solid #a00000;
-  border-radius:5px;
-  margin:10px 0;
+  border:1px solid #a00000;            /* klarer Rahmen */
+  border-radius:0px;                   /* eckig (Mock) */
+  width: 900px;                        /* kompakte Breite */
+  margin: 10px auto;                   /* zentriert */
+}
+.error-login {
+  background-color:#ffdddd;            /* roter Pastellhintergrund */
+  color:#a00000;                       /* dunkles Rot für Text */
+  padding:10px;
+  border:1px solid #a00000;            /* klarer Rahmen */
+  border-radius:0px;                   /* eckig (Mock) */
+  width: 380px;                        /* schmale Breite */
+  margin: 10px auto;  
 }
 .tasten img {
-    width: 900px;
+    width: 900px;                      /* platzhalterndes Tasten-Bild voll breit */
     margin-bottom: 25px;
     margin-top: 5px;
 }
 .date {
-    padding-top: 10px;
-    font-weight: 700;
+    padding-top: 10px;                 /* Abstand oberhalb Datum */
+    font-weight: 700;                   /* betont */
 }
-
-
-/* ===============================
-   noch nicht zugeordnet
-   =============================== */
-
 .payment-group { 
   border: 0; 
   margin: 8px 0 12px; 
   padding: 0; 
   display: flex; 
   gap: 12px; 
-  flex-wrap: wrap;
+  flex-wrap: wrap;                     /* Zeilenumbruch bei Platzmangel */
 }
 .payment-group legend { 
   font-weight: 700; 
   margin-bottom: 6px; 
-  width: 100%;
+  width: 100%;                         /* volle Breite über den Radios */
 }
 .payment-group .radio { 
   display: inline-flex; 
   align-items: center; 
   gap: 6px; 
-  background: var(--brand-300); 
+  background: var(--brand-300);        /* Standard-Zustand: grünlich */
   border-radius: 0; 
   padding: 15px 30px; 
   font-weight: 700; 
@@ -321,107 +368,103 @@ button:hover{ filter:brightness(0.98); }
   color: #000;
 }
 .payment-group .radio input { 
-  accent-color: var(--brand-700); 
+  accent-color: var(--brand-700);      /* Farbe der nativen Radio-Controls (falls sichtbar) */
 }
 .payment-group .radio:has(input:checked) { 
-  filter: brightness(0.98);
-  color: #fff;
+  filter: brightness(0.98);            /* minimale visuelle Rückmeldung */
+  color: #fff;                         /* Schrift invertieren im aktiven Zustand */
 }
 
+/* Suchfeld mit integrierter Lupe (Artikelsuche) */
 .searchbar-wrapper {
-  position: relative;
+  position: relative;                  /* erlaubt das Positionieren der Lupe im Feld */
   display: inline-block;
 }
 
 .search-input {
-  padding-left: 38px; /* Platz für die Lupe links */
+  padding-left: 38px;                  /* Platz für die Lupe links im Feld */
 }
 
-
+/* Lupe als Button im Feld */
 .search-icon {
   position: absolute;
-  left: 660px;
-  top: 65%;
+  left: 600px;                         /* Position der Lupe (ggf. an Feldbreite anpassen) */
+  top: 65%;                            /* vertikal mittig approx. */
   transform: translateY(-50%);
   border: 0;
   background: transparent;
   padding: 0;
-  width: 22px;
-  height: 22px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  opacity: .8;
+  width: 22px; height: 22px;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; opacity: .8;
 }
 .search-icon img {
-    width: 30px;
+    width: 30px;                       /* Lupe als Bild-Alternative */
     display: block;
 }
 
 .search-icon svg path {
-  fill: currentColor;
+  fill: currentColor;                  /* SVG erbt Textfarbe */
 }
 
 .infield-icon .search-input {
-  /* deine bestehenden Suchfeld-Styles; Beispiel: */
+  /* spezielle Stilvariante für Inputs mit Icon */
   border: 1px solid var(--gray-400);
-  border-radius: 0;
-  padding: 10px 14px 10px 15px;
+  border-radius: 0;                    /* eckig */
+  padding: 10px 14px 10px 15px;        /* links weniger, da Lupe extern positioniert */
   background: #fff;
-  font-size: 14px;
+  font-size: 19px;                     /* größere Schrift im Suchfeld */
 }
 
+/* (duplizierte Definitionen – beibehalten gemäß Wunsch) */
 .searchbar-wrapper { position: relative; display: inline-block; }
 .search-input { padding-left: 38px; }
 .search-icon {
-  position: absolute; left: 660px; top: 62%; transform: translateY(-50%);
+  position: absolute; left: 600px; top: 62%; transform: translateY(-50%);
   border: 0; background: transparent; padding: 0; width: 22px; height: 22px;
   display: inline-flex; align-items: center; justify-content: center; cursor: pointer; opacity: .8;
 }
 .search-icon svg path { fill: currentColor; }
 
 
-
-
 /* ===============================
    Tasten-Sektion
+   -> Nummern-Pad, Kategorien-Spalte und Alphabet-Keyboard
    =============================== */
 
-
-/* Layout der Tasten-Sektion */
+/* Layout der Tasten-Sektion (gesamter Bereich unter der Suche) */
 .tasten{
-  display:grid;
-  grid-template-columns:auto 1fr;
+  display:grid;                         /* Zwei-Spalten-Layout */
+  grid-template-columns:auto 1fr;       /* links: Pad, rechts: Kategorien */
   gap:16px;
   align-items:start;
-  margin:18px auto;
-  max-width:900px;
+  margin:18px auto 5px auto;            /* Außenabstände */
+  max-width:900px;                      /* an Contentbreite angepasst */
 }
 
-/* Linkes Nummern-Pad */
+/* Linkes Nummern-Pad (neue Definition; überschreibt ggf. frühere .keypad) */
 .keypad{
   display:grid;
-  grid-template-columns:repeat(5, 80px);
+  grid-template-columns:repeat(5, 80px); /* 5 Spalten à 80px */
   gap:8px;
 }
 .key{
-  background: var(--gray-300, #EEEEEE);
+  background: var(--gray-300, #EEEEEE); /* Standard-Taste hellgrau */
   border: 1px solid var(--gray-300, #EEEEEE);
-  border-radius: 0px;
-  padding: 20px 0;
+  border-radius: 0px;                   /* eckig gemäß Mock */
+  padding: 18px 0;                      /* vertikal angenehm groß */
   text-align: center;
   font-weight: 700;
+  font-size: 19px;                      /* große Beschriftung */
   box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,.04));
-  cursor: pointer;
-  user-select: none;
+  cursor: pointer; user-select: none;   /* klickbar, kein Text-Select */
 }
 
-/* Rechte Kategorie-Spalte */
+/* Rechte Kategorie-Spalte (Buttons für Produktgruppen) */
 .keypad-side{
   display:grid;
   gap:12px;
-  min-width: 260px;
+  min-width: 260px;                     /* konstante Breite rechts */
 }
 .cat-btn{
   background: var(--brand-300, #CCE6DA);
@@ -435,29 +478,29 @@ button:hover{ filter:brightness(0.98); }
   font-size: 18px;
 }
 .cat-btn--muted{
-  background: #EBEBEB;
+  background: #EBEBEB;                  /* sekundäre Aktion (z. B. Storno) */
   border-color: #EBEBEB;
 }
 
 /* Alphabetisches Pad unter beiden Spalten */
 .alpha-pad{
-  grid-column: 1 / -1;         /* unter Nummern-Pad + Kategorie-Spalte */
+  grid-column: 1 / -1;                 /* nimmt volle Breite unter beiden Spalten ein */
   display: grid;
   gap: 8px;
   margin-top: 8px;
 }
 .alpha-row{
   display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 83px;      /* Tastenbreite */
+  grid-auto-flow: column;               /* Tasten pro Zeile fließen horizontal */
+  grid-auto-columns: 83px;              /* Tastenbreite */
   gap: 8px;
   justify-content: start;
 }
 .alpha-key{
-  padding: 15px 0;              /* etwas kompakter als Zahlen-Tasten */
-  border-radius: 0px;
+  padding: 15px 0;                      /* etwas kompakter als Zahlen-Tasten */
+  border-radius: 0px;                    /* eckig */
 }
-/* Alpha-Pad hast du schon – hier nur die Extras */
+/* Zusatztasten-Zeile: Ä/Ö/Ü/ß, Space und Backspace */
 .alpha-row--special { margin-top: 4px; }
-.alpha-space { grid-column: span 4; }     /* macht die Leerzeichen-Taste breiter */
-.alpha-back  { font-weight: 800; }        /* optisch etwas hervorgehoben */
+.alpha-space { grid-column: span 4; }   /* Leerzeichen-Taste breiter machen */
+.alpha-back  { font-weight: 800; }      /* Backspace optisch betonen */

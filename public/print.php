@@ -4,7 +4,7 @@ require_once __DIR__ . '/../helpers.php';
 require_once __DIR__ . '/../db.php';
 
 
-// UTF-8
+// Funktion für möglichst viele Zeichenverwendung inkl. Umlaute
 if (!function_exists('pdf_txt')) {
   function pdf_txt(string $s): string {
     return iconv('UTF-8', 'windows-1252//TRANSLIT', $s);
@@ -26,7 +26,6 @@ require_once __DIR__ . '/../lib/fpdf.php';
 $sale_id = isset($_GET['sale_id']) ? (int)$_GET['sale_id'] : 0;
 if ($sale_id <= 0) {
     http_response_code(400);
-    // Kein echo/print hier, um PDF-Header nicht zu stören:
     exit;
 }
 
@@ -58,7 +57,7 @@ if (!$sale) {
 
 // Positionen laden
 $stmt = $pdo->prepare("
-    SELECT si.*, p.article_no, p.name
+    SELECT si.*, p.id, p.article_no, p.name
     FROM sale_items si
     JOIN products p ON si.product_id = p.id
     WHERE si.sale_id = ?
@@ -90,7 +89,7 @@ else {
 }
 
 // ==== Headerblock links + Logo rechts ==== 
-$logoPath = __DIR__ . '\images\bauernglueck_logo.png'; // anpassen
+$logoPath = __DIR__ . '\images\bauernglueck_logo.png'; // Link zu Logo-Datei
 $logoW    = 35;    // Logo-Breite in mm
 $gap      = 6;     // Abstand Textblock <-> Logo
 
@@ -108,7 +107,7 @@ $logoH = $logoW * ($imgHpx / $imgWpx);
 $pdf->Image($logoPath, $pageW - $rm - $logoW, $y0, $logoW);
 
 
-// Textblock linksbündig
+// Absender-Adresse, linksbündig
 
 $pdf->SetTextColor(103, 126, 124);
 $pdf->SetFont('Arial', 'B', 11);
@@ -119,6 +118,8 @@ $pdf->Cell(0, 6, 'Harald Schlarb', 0, 1);
 $pdf->Cell(0, 6, pdf_txt('Dorfstraße 35'), 0, 1);
 $pdf->Cell(0, 6, '13051 Berlin', 0, 1);
 $pdf->Cell(0, 6, 'Tel.: 0049 30 123456', 0, 1);
+$pdf->Cell(0, 6, 'info@bauernglueck.de', 0, 1);
+$pdf->Cell(0, 6, 'www.bauernglueck.de', 0, 1);
 $pdf->Cell(0, 6, 'USt-IdNr.: DE123456789', 0, 1);
 
 // unter den höheren der beiden Blöcke weiterschreiben
@@ -148,7 +149,6 @@ if (!empty($sale['customer_name'])) {
 }
 
 
-
 // Kunde (falls Lieferschein)
 if (!empty($sale['customer_name'])) {
     $pdf->Ln(2);
@@ -172,8 +172,9 @@ if (!empty($sale['customer_name'])) {
 
 // Tabelle Kopf
 $pdf->SetFont('Arial', 'B', 10);
+$pdf->Cell(10, 7, 'Pos.', 0);
 $pdf->Cell(25, 7, 'Art.-Nr.', 0);
-$pdf->Cell(80, 7, 'Artikelname', 0);
+$pdf->Cell(70, 7, 'Artikelname', 0);
 $pdf->Cell(15, 7, 'Menge', 0, 0, 'R');
 $pdf->Cell(25, 7, 'Einzelpreis', 0, 0, 'R');
 $pdf->Cell(30, 7, 'Summe', 0, 1, 'R');
@@ -181,12 +182,16 @@ $pdf->Cell(30, 7, 'Summe', 0, 1, 'R');
 // Tabelle Inhalt
 $pdf->SetFont('Arial', '', 10);
 $total = 0.0;
+$pos = 0;
+
 foreach ($items as $it) {
+    $pos++; // laufende Positionsnummer
     $line = (float)$it['price'] * (float)$it['quantity'];
     $total += $line;
 
+    $pdf->Cell(10, 6, $pos, 0); 
     $pdf->Cell(25, 6, mb_convert_encoding($it['article_no'], 'ISO-8859-1', 'UTF-8'), 0);
-    $pdf->Cell(80, 6, mb_convert_encoding($it['name'], 'ISO-8859-1', 'UTF-8'), 0);
+    $pdf->Cell(70, 6, mb_convert_encoding($it['name'],       'ISO-8859-1', 'UTF-8'), 0);
     $pdf->Cell(15, 6, number_format((float)$it['quantity'], 2, ',', '.'), 0, 0, 'R');
     $pdf->Cell(25, 6, number_format((float)$it['price'],    2, ',', '.') . ' Euro', 0, 0, 'R');
     $pdf->Cell(30, 6, number_format($line,                  2, ',', '.') . ' Euro', 0, 1, 'R');
@@ -224,21 +229,13 @@ $pdf->SetDrawColor(203,230,218);
 $pdf->Line($x1, $y, $x2, $y);
 $pdf->Ln(4); // kleiner Abstand nach der Linie
 
-// Brutto-Gesamt (unverändert dein $total)
+// Brutto-Gesamt
 $pdf->SetTextColor(103, 126, 124);
 $pdf->SetFont('Arial', 'B', 10);
 $pdf->Cell(145, 7, 'Gesamtbetrag (brutto)', 0);
 $pdf->Cell(30,  7, number_format($total, 2, ',', '.') . ' Euro', 0, 1, 'R');
 
 $pdf->Ln(6);
-
-$pdf->SetTextColor(0, 0, 0);
-$pdf->SetFont('Arial', '', 10);
-$pdf->Cell(176, 7, pdf_txt('Hinweis gem. §33 UStDV: Dieser Beleg enthält eine fortlaufende Nummer, Datum der Ausstellung, '), 0, 1);
-$pdf->Cell(176, 7, pdf_txt('Menge und Art der gelieferten Gegenstaende sowie Entgelt und darauf entfallenden Steuerbetrag '), 0, 1);
-$pdf->Cell(176, 7, pdf_txt('mit Steuersatz. Bitte Aufbewahren!'), 0, 1);
-
-
 
 $pdf->MultiCell(0, 6, mb_convert_encoding($hinweis, 'ISO-8859-1', 'UTF-8'));
 

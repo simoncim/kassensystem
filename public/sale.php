@@ -1,39 +1,51 @@
 <?php
-require_once __DIR__ . '/../auth.php';
-require_once __DIR__ . '/../helpers.php';
+/**
+ * Kassensystem – Verkauf (sale.php)
+ * ---------------------------------------------------------
+ * Zweck: Artikelsuche/-übernahme, Kundenauswahl,
+ *        Checkout (Bon/Lieferschein) inkl. Rabatt.
+ */
 
-check_auth();
-$user = current_user();
+require_once __DIR__ . '/../auth.php';     // Auth-Utilities: check_auth(), current_user()
+require_once __DIR__ . '/../helpers.php';  // Helpers: e(), format_price(), generate_sale_no(), $pdo etc.
 
-// Warenkorb & Verkaufskontext initialisieren
+check_auth();                 // Zugriff nur für eingeloggte Benutzer zulassen
+$user = current_user();       // Aktueller Benutzer (für Belegspeicherung etc.)
+
+// --------------------------------------------------
+// Verkaufskontext initialisieren (Session)
+// --------------------------------------------------
 if (!isset($_SESSION['cart'])) {
-    $_SESSION['cart'] = [];
+    $_SESSION['cart'] = [];   // Array von Positionen: id, article_no, name, price, quantity
 }
 if (!isset($_SESSION['sale_ctx'])) {
     $_SESSION['sale_ctx'] = [
-        'selected_customer_id' => null
+        'selected_customer_id' => null  // gewählter Kunde (nur für Lieferschein nötig)
     ];
 }
 
-$message = "";
+$message = ""; // Meldung/Fehlertexte für UI
 
 // --------------------------------------------------
-// Artikel aus Warenkorb entfernen
+// Artikel entfernen (per GET ?remove=<index>)
+// -> Entfernt Position 
 // --------------------------------------------------
 if (isset($_GET['remove'])) {
     $idx = (int)$_GET['remove'];
     if (isset($_SESSION['cart'][$idx])) {
-        unset($_SESSION['cart'][$idx]);
-        $_SESSION['cart'] = array_values($_SESSION['cart']);
+        unset($_SESSION['cart'][$idx]);            // Element löschen
+        $_SESSION['cart'] = array_values($_SESSION['cart']); // Indizes neu ordnen
     }
 }
 
 // --------------------------------------------------
 // Artikel per Suche übernehmen (POST) + Menge
+// -> Fügt gewählten Artikel hinzu
+// -> Redirect zurück auf sale.php mit evtl. Suchparametern
 // --------------------------------------------------
 if (isset($_POST['add_product_id'])) {
     $pid = (int)$_POST['add_product_id'];
-    $qty = max(1, (int)($_POST['qty'] ?? 1));
+    $qty = max(1, (int)($_POST['qty'] ?? 1));      // Mindestmenge = 1
 
     $st = $pdo->prepare("SELECT * FROM products WHERE id = ?");
     $st->execute([$pid]);
@@ -46,47 +58,49 @@ if (isset($_POST['add_product_id'])) {
             'quantity'   => $qty
         ];
     }
-    // Zurück zur Suche (damit die Liste erhalten bleibt)
+    // Zurück zur Suche (damit die Ergebnisliste erhalten bleibt)
     $qs = [];
     if (!empty($_GET['q_product'])) { $qs['q_product'] = $_GET['q_product']; }
     if (!empty($_GET['q_customer'])) { $qs['q_customer'] = $_GET['q_customer']; }
     $redirect = 'sale.php' . (empty($qs) ? '' : ('?' . http_build_query($qs)));
     header("Location: " . $redirect);
-    exit;
+    exit; // Redirect sofort beenden
 }
 
-
 // --------------------------------------------------
-// Kunde per Suchergebnis übernehmen
+// Kunde per Suchergebnis übernehmen (GET set_customer_id)
+// -> Speichert die Kunden-ID im Verkaufskontext
 // --------------------------------------------------
 if (isset($_GET['set_customer_id'])) {
     $cid = (int)$_GET['set_customer_id'];
     $st = $pdo->prepare("SELECT id FROM customers WHERE id = ?");
     $st->execute([$cid]);
     if ($st->fetch()) {
-        $_SESSION['sale_ctx']['selected_customer_id'] = $cid;
+        $_SESSION['sale_ctx']['selected_customer_id'] = $cid; // Kunde setzen
     }
-    header("Location: sale.php");
+    header("Location: sale.php"); // Seite neu laden (saubere URL ohne set_customer_id)
     exit;
 }
 
-// Kunde entfernen
+// Kunde entfernen (GET clear_customer=1)
 if (isset($_GET['clear_customer'])) {
-    $_SESSION['sale_ctx']['selected_customer_id'] = null;
+    $_SESSION['sale_ctx']['selected_customer_id'] = null; // Auswahl zurücksetzen
     header("Location: sale.php");
     exit;
 }
 
 // --------------------------------------------------
-// Verkauf abschließen
+// Verkauf abschließen (POST checkout)
+// -> Erzeugt Beleg (sales + sale_items) und leitet zur Druckansicht weiter
 // --------------------------------------------------
 if (isset($_POST['checkout'])) {
     $payment  = $_POST['payment'] ?? 'cash';
+
+    // Rabatt robust parsen (akzeptiert z. B. "1,50" und "1.50"; filtert Fremdzeichen)
     $discount_raw = $_POST['discount'] ?? '0';
     $discount = (float) str_replace(',', '.', preg_replace('/[^\d,\.\-]/', '', $discount_raw));
 
-
-    // Kunde bestimmen (nur bei Lieferschein Pflicht)
+    // Kunde bestimmen (nur bei Lieferschein)
     $customer_id = null;
     if ($payment === 'invoice') {
         if (!empty($_SESSION['sale_ctx']['selected_customer_id'])) {
@@ -98,21 +112,21 @@ if (isset($_POST['checkout'])) {
 
     if (!$message) {
         if (count($_SESSION['cart']) > 0) {
-            $sale_no = generate_sale_no("BON");
+            $sale_no = generate_sale_no("BON"); // z. B. Prefix BON + laufende Nummer/Zeitstempel
 
             // Zwischensumme bilden
             $subtotal = 0.0;
             foreach ($_SESSION['cart'] as $item) {
-            $subtotal += ((float)$item['price'] * (int)$item['quantity']);
-        }
+                $subtotal += ((float)$item['price'] * (int)$item['quantity']);
+            }
 
-        // Rabatt deckeln: mind. 0, höchstens Zwischensumme
-        $discount = max(0.0, min($discount, $subtotal));
+            // Rabatt deckeln: mind. 0, höchstens Zwischensumme
+            $discount = max(0.0, min($discount, $subtotal));
 
-        // Endbetrag
-        $total = $subtotal - $discount;
+            // Endbetrag (Brutto, wenn Preise brutto sind)
+            $total = $subtotal - $discount;
 
-
+            // Verkauf (Kopf) speichern
             $stmt = $pdo->prepare("INSERT INTO sales 
                 (sale_no, user_id, customer_id, payment_method, discount, total) 
                 VALUES (?,?,?,?,?,?)");
@@ -124,8 +138,9 @@ if (isset($_POST['checkout'])) {
                 $discount,
                 $total
             ]);
-            $sale_id = $pdo->lastInsertId();
+            $sale_id = $pdo->lastInsertId(); // Primärschlüssel des Belegs
 
+            // Positionen speichern
             $stmt_item = $pdo->prepare("INSERT INTO sale_items 
                 (sale_id, product_id, quantity, price) VALUES (?,?,?,?)");
             foreach ($_SESSION['cart'] as $item) {
@@ -137,17 +152,18 @@ if (isset($_POST['checkout'])) {
                 ]);
             }
 
+            // Artikelübersicht leeren und zur Druckseite weiterleiten
             $_SESSION['cart'] = [];
             header("Location: print.php?sale_id=" . $sale_id);
             exit;
         } else {
-            $message = "Warenkorb ist leer!";
+            $message = "Bitte Artikel auswählen!"; // Wird angezeigt, wenn keine Artikel ausgewählt ist
         }
     }
 }
 
 // --------------------------------------------------
-// Summen für Anzeige
+// Summen für Anzeige (nur UI, unabhängig von 'total' oben)
 // --------------------------------------------------
 $sum = 0.0;
 foreach ($_SESSION['cart'] as $it) {
@@ -155,7 +171,8 @@ foreach ($_SESSION['cart'] as $it) {
 }
 
 // --------------------------------------------------
-// Suche: Kunden
+// Suche: Kunden (GET q_customer)
+// -> Einfache LIKE-Suche nach Kundennummer oder Name
 // --------------------------------------------------
 $search_customer = trim($_GET['q_customer'] ?? '');
 $found_customers = [];
@@ -170,6 +187,7 @@ if ($search_customer !== '') {
     $st->execute([$like, $like]);
     $found_customers = $st->fetchAll();
 }
+// bereits ausgewählten Kunden (falls vorhanden) vollständig laden
 $selected_customer = null;
 if (!empty($_SESSION['sale_ctx']['selected_customer_id'])) {
     $st = $pdo->prepare("SELECT id, customer_no, name, street, zip, city FROM customers WHERE id = ?");
@@ -178,7 +196,8 @@ if (!empty($_SESSION['sale_ctx']['selected_customer_id'])) {
 }
 
 // --------------------------------------------------
-// Suche: Artikel
+// Suche: Artikel (GET q_product)
+// -> LIKE auf Artikelnummer/Bezeichnung, limitierte Trefferliste
 // --------------------------------------------------
 $search_product = trim($_GET['q_product'] ?? '');
 $found_products = [];
@@ -193,6 +212,8 @@ if ($search_product !== '') {
     $st->execute([$like, $like]);
     $found_products = $st->fetchAll();
 }
+
+// Für Formular-Default: eingegebener Rabatt beibehalten
 $discount_input = $_POST['discount'] ?? '0';
 ?>
 
@@ -202,37 +223,42 @@ $discount_input = $_POST['discount'] ?? '0';
 <head>
     <meta charset="UTF-8">
     <title>Verkauf - Kassensystem</title>
-    <link rel="stylesheet" href="assets/styles.css">
+    <link rel="stylesheet" href="assets/styles.css"> <!-- Zentrales Stylesheet -->
 </head>
 <body>
 
 <?php if ($message): ?>
+    <!-- UI-Fehlermeldung (z. B. Kunde fehlt bei Lieferschein) -->
     <div class="error"><?= e($message) ?></div>
 <?php endif; ?>
 
-
-<section class="logo">
-    <img src="images/bauernglueck_logo.png">
+<!-- Kopfbereich mit Menü-Icon (Linien) und Logo -->
+<section class="menu-und-logo">
+    <div class="menu">
+        <div class="line"></div>
+        <div class="line"></div>
+        <div class="line"></div>
+    </div>
+    <img src="images/bauernglueck_logo.png"> <!-- Logo (Pfad beibehalten) -->
 </section>
+
+
+<!-- Artikelsuche & Übernahme -->
 <section class="add-product">
    
+    <!-- Suchformular: Lupe als integrierter Submit-Button, kein separater Button -->
     <form method="get" class="search-form" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap">
-  <div class="searchbar-wrapper infield-icon">
-    <button type="submit" class="search-icon" aria-label="Suchen" title="Suchen">
-        <img src="images\lupe.png">
+        <div class="searchbar-wrapper infield-icon">
+        <button type="submit" class="search-icon" aria-label="Suchen" title="Suchen">
+        <img src="images\lupe.png"> <!-- Lupe als Bild -->
       
-    </button>
-    <input type="text" name="q_product"
+        </button>
+        <input type="text" name="q_product"
            value="<?= e($search_product) ?>"
            placeholder="Artikelnummer oder Artikelname"
-           class="searchbar search-input" style="min-width:650px">
-  </div>
-
- 
-</form>
-
-    
-
+           class="searchbar search-input" style="min-width:600px">
+        </div>
+    </form>
 
     <?php if ($search_product !== ''): ?>
         <?php if (empty($found_products)): ?>
@@ -243,7 +269,7 @@ $discount_input = $_POST['discount'] ?? '0';
                     <th>Nr.</th>
                     <th>Bezeichnung</th>
                     <th>Preis</th>
-                    <th class="right">Menge</th>
+                    <th>Menge</th>
                     <th></th>
                 </tr>
                 <?php foreach ($found_products as $p): ?>
@@ -252,6 +278,7 @@ $discount_input = $_POST['discount'] ?? '0';
                         <td><?= e($p['name']) ?></td>
                         <td><?= format_price($p['price']) ?></td>
                         <td class="right">
+                            <!-- Übernahme eines Treffers in die Artikelübersicht (POST) -->
                             <form method="post" action="sale.php<?= $search_product ? ('?'.http_build_query(['q_product'=>$search_product] + (!empty($search_customer)?['q_customer'=>$search_customer]:[]))) : '' ?>" style="display:flex; gap:6px; justify-content:flex-end; align-items:center">
                                 <input type="hidden" name="add_product_id" value="<?= (int)$p['id'] ?>">
                                 <input type="number" name="qty" min="1" step="1" value="1" style="max-width:90px">
@@ -265,17 +292,21 @@ $discount_input = $_POST['discount'] ?? '0';
 
         <?php endif; ?>
     <?php endif; ?>
+
+    
+
 </section>
 
+<!-- Artikelübersicht -->
 <section class="cart">
-   <!-- <h2>Bestellung Start</h2> -->
+  
     <table>
         <tr>
             <th>Art.-Nr.</th>
             <th>Artikelname</th>
-            <th>Menge</th>
-            <th>Preis</th>
-            <th>Summe</th>
+            <th class="right">Menge</th>
+            <th class="right">Preis</th>
+            <th class="right">Summe</th>
             <th></th>
         </tr>
         <?php foreach ($_SESSION['cart'] as $i => $item): 
@@ -283,21 +314,37 @@ $discount_input = $_POST['discount'] ?? '0';
             <tr>
                 <td><?= e($item['article_no']) ?></td>
                 <td><?= e($item['name']) ?></td>
-                <td><?= e($item['quantity']) ?></td>
-                <td><?= format_price((float)$item['price']) ?></td>
-                <td><?= format_price($line) ?></td>
-                <td><a href="?remove=<?= $i ?>">Entfernen</a></td>
+                <td class="right"><?= e($item['quantity']) ?></td>
+                <td class="right"><?= format_price((float)$item['price']) ?></td>
+                <td class="right"><?= format_price($line) ?></td>
+                <td>
+                    <!-- Artikel entfernen als Button (GET) mit Erhalt der Filter -->
+                    <form method="get" action="sale.php" style="display:inline">
+                            <input type="hidden" name="remove" value="<?= $i ?>">
+                        <?php if ($search_product !== ''): ?>
+                            <input type="hidden" name="q_product" value="<?= e($search_product) ?>">
+                        <?php endif; ?>
+                        <?php if (!empty($search_category)): ?>
+                            <input type="hidden" name="q_category" value="<?= e($search_category) ?>">
+                        <?php endif; ?>
+                        <?php if ($search_customer !== ''): ?>
+                            <input type="hidden" name="q_customer" value="<?= e($search_customer) ?>">
+                        <?php endif; ?>
+                            <button type="submit" class="btn btn-danger btn-sm">Artikel entfernen</button>
+                    </form>
+                </td>
+
             </tr>
         <?php endforeach; ?>
         <tr class="table-line">
-            <td colspan="4" style="text-align:right"><strong>Gesamt:</strong></td>
-            <td><strong><?= format_price($sum) ?></strong></td>
+            <td colspan="4" style="text-align:left padding:10px"><strong>Gesamt</strong></td>
+            <td class="right"><strong><?= format_price($sum) ?></strong></td>
             <td></td>
         </tr>
     </table>
 </section>
 
-<!-- TASTEN / KEYPAD -->
+<!-- TASTEN / KEYPAD: Nummern, Kategorien, Alphabet -->
 <section class="tasten">
   <!-- Linkes Nummern-Pad -->
   <div class="keypad">
@@ -322,7 +369,7 @@ $discount_input = $_POST['discount'] ?? '0';
     <button class="key" data-key="ESC">ESC</button>
     <button class="key" data-key="0">0</button>
     <button class="key" data-key="00">00</button>
-    <button class="key" data-key=",">,</button>
+    <button class="key" data-key="," >,</button>
     <button class="key" data-key=".">.</button>
   </div>
 
@@ -386,18 +433,34 @@ $discount_input = $_POST['discount'] ?? '0';
 
 </section>
 
+<!-- Kunde wählen / anzeigen -->
 <section class="customer">
 
     <?php if ($selected_customer): ?>
+        <!-- Anzeige des gewählten Kunden + Button zum Entfernen -->
         <p>
             <strong><?= e($selected_customer['customer_no']) ?></strong> — 
             <?= e($selected_customer['name']) ?><br>
             <?= e($selected_customer['street']) ?>, 
             <?= e($selected_customer['zip']) ?> <?= e($selected_customer['city']) ?>
         </p>
-        <p><a href="?clear_customer=1">Kunde entfernen</a></p>
+        <form method="get" action="sale.php" style="display:inline">
+            <input type="hidden" name="clear_customer" value="1">
+            <?php if ($search_product !== ''): ?>
+                <input type="hidden" name="q_product" value="<?= e($search_product) ?>">
+            <?php endif; ?>
+            <?php if (!empty($search_category)): ?>
+                <input type="hidden" name="q_category" value="<?= e($search_category) ?>">
+            <?php endif; ?>
+            <?php if ($search_customer !== ''): ?>
+                <input type="hidden" name="q_customer" value="<?= e($search_customer) ?>">
+            <?php endif; ?>
+            <button type="submit" class="btn btn-danger btn-sm">Kunde entfernen</button>
+        </form>
+
     <?php else: ?>
 
+        <!-- Kundensuche mit integrierter Lupe (Submit) -->
         <form method="get" class="search-form customer-search" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap">
   <div>
     <div class="searchbar-wrapper infield-icon">
@@ -410,7 +473,7 @@ $discount_input = $_POST['discount'] ?? '0';
              value="<?= e($search_customer) ?>"
              placeholder="Kundennummer oder Kundenname"
              class="searchbar search-input"
-             style="min-width:650px">
+             style="min-width:600px">
     </div>
   </div>
 </form>
@@ -432,7 +495,24 @@ $discount_input = $_POST['discount'] ?? '0';
                             <td><?= e($c['customer_no']) ?></td>
                             <td><?= e($c['name']) ?></td>
                             <td><?= e($c['street']) ?>, <?= e($c['zip']) ?> <?= e($c['city']) ?></td>
-                            <td><a href="?set_customer_id=<?= (int)$c['id'] ?>">Übernehmen</a></td>
+                            <td>
+                            <!-- Kundenübernahme als Button (GET) mit Erhalt aktueller Filter -->
+                            <form method="get" action="sale.php" style="display:inline">
+                                <input type="hidden" name="set_customer_id" value="<?= (int)$c['id'] ?>">
+
+                                <?php if ($search_product !== ''): ?>
+                                <input type="hidden" name="q_product" value="<?= e($search_product) ?>">
+                                <?php endif; ?>
+                                <?php if (!empty($search_category)): ?>
+                                <input type="hidden" name="q_category" value="<?= e($search_category) ?>">
+                                <?php endif; ?>
+                                <?php if ($search_customer !== ''): ?>
+                                <input type="hidden" name="q_customer" value="<?= e($search_customer) ?>">
+                                <?php endif; ?>
+
+                                <button type="submit" class="btn btn-primary btn-sm">Übernehmen</button>
+                            </form>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                 </table>
@@ -443,17 +523,18 @@ $discount_input = $_POST['discount'] ?? '0';
 
 
 
+<!-- Checkout (Rabatt, Zahlungsart, Abschluss) -->
 <section class="checkout">
 
 
-    <!--<h2>Verkaufsabschluss</h2>-->
+    
     <form method="post">
         <label>Rabatt (in Euro)</label>
         <input type="number" step="0.01" inputmode="decimal" name="discount" value="<?= e($discount_input) ?>">
 
         <?php $selected_payment = $_POST['payment'] ?? 'cash'; ?>
 <fieldset class="payment-group">
-  <!--<legend>Zahlungsart</legend>-->
+  
 
   <label class="radio">
     <input type="radio" name="payment" id="pay-cash" value="cash"
@@ -485,17 +566,20 @@ $discount_input = $_POST['discount'] ?? '0';
 </section>
 
 
+<!-- Datum/Uhrzeit-Anzeige unten -->
 <section class="date">
     <?php
         echo ' ';
-        echo date('d.m.Y | H:i') . ' Uhr';
+        echo date('d.m.Y | H:i') . ' Uhr'; // einfache Laufzeitanzeige im UI
     ?>
 </section>
 
+<!-- Footer/Statusleiste mit Benutzer und Logout -->
 <header>
     <div>Angemeldet als: <?= e($user['full_name']) ?> | <a href="logout.php">Logout</a></div>
 </header>
 
+<!-- On-Screen-Keyboard Logik (Nummern, Buchstaben, Steuer, Kategorie-Filter) -->
 <script>
 (function(){
   // ===== DOM-Referenzen =====
@@ -504,7 +588,7 @@ $discount_input = $_POST['discount'] ?? '0';
   const qInput      = searchForm ? searchForm.querySelector('input[name="q_product"]') : null;
   const catSelect   = searchForm ? searchForm.querySelector('select[name="q_category"]') : null;
 
-  // NEU: Kunde wählen – Formular + Feld
+  // Kunde wählen – Formular + Feld
   const customerSection = document.querySelector('.customer');
   const customerForm    = customerSection ? customerSection.querySelector('form[method="get"]') : null;
   const qCustomer       = customerForm ? customerForm.querySelector('input[name="q_customer"]') : null;
@@ -654,13 +738,12 @@ $discount_input = $_POST['discount'] ?? '0';
     }
   });
 
-  // Nach neu gerenderten Tabellen ggf. qty-Felder neu binden
+  // Nach neu gerenderten Tabellen ggf. qty-Felder neu binden (Delegation)
   document.addEventListener('click', (e)=>{
     if (e.target.closest('table')) bindFocusTargets();
   });
 })();
 </script>
-
 
 
 
